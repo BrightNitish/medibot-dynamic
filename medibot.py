@@ -21,6 +21,41 @@ client = OpenAI(
     api_key=NVIDIA_API_KEY 
 )
 
+def optimize_pubmed_query(user_query, client):
+    """
+    Agentic layer to convert conversational natural language into 
+    strict PubMed keyword search strings.
+    """
+    system_prompt = (
+        "You are a strict medical librarian. Convert the user's conversational query "
+        "into a clean, keyword-only search string optimized for PubMed API. "
+        "Remove all stopwords (like 'What is', 'Give me', 'of', 'a', etc.), punctuation, and conversational filler. "
+        "Extract ONLY the core medical entities, conditions, patient demographics, and drugs. "
+        "Join these core entities with 'AND'. "
+        "Example input: 'What is the role of DAPAgliflozin in cardiac arrhythmia ?' "
+        "Example output: Dapagliflozin AND Cardiac Arrhythmia\n"
+        "Example input: 'Give me differential diagnosis and diagnostic work up of a 50 yr old obese patient with acute breathlessness'\n"
+        "Example output: Differential Diagnosis AND Obesity AND Dyspnea AND Middle Aged\n"
+        "Output ONLY the final search string, nothing else. No explanations."
+    )
+    
+    try:
+        response = client.chat.completions.create(
+            model="meta/llama-3.1-8b-instruct",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_query}
+            ],
+            temperature=0.0, # 0.0 taaki bilkul creative na ho, sirf keywords de
+            max_tokens=50
+        )
+        optimized_query = response.choices[0].message.content.strip()
+        # Remove any quotes the LLM might accidentally add
+        optimized_query = optimized_query.replace('"', '').replace("'", "")
+        return optimized_query
+    except Exception as e:
+        # Fallback: agar LLM fail ho jaye, toh original query bhej do
+        return user_query
 # ==========================================
 # PURE REAL-TIME PUBMED GLOBAL API (FIXED)
 # ==========================================
@@ -103,8 +138,15 @@ def main():
             context = ""
             sources_dict = {}
 
-            # Pure Live Global PubMed Extraction (No Local FAISS interference anymore!)
-            live_context, live_sources = fetch_pubmed_realtime(prompt, max_results=3)
+            # 1. NEW: Agentic Query Optimization Layer
+            optimized_keywords = optimize_pubmed_query(prompt, client)
+            
+            # (Optional) Display what the AI extracted so the user/interviewer can see the magic
+            st.info(f"🔍 Optimized Agentic Search: {optimized_keywords}")
+
+            # 2. Pure Live Global PubMed Extraction (Pass the OPTIMIZED keywords, not the raw prompt)
+            live_context, live_sources = fetch_pubmed_realtime(optimized_keywords, max_results=3)
+            
             if live_context:
                 context += "Live Academic Publications:\n" + live_context
                 sources_dict.update(live_sources)

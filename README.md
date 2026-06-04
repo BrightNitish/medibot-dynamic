@@ -1,6 +1,6 @@
 # 🩺 MediBot: Specialized Medical AI Assistant
 
-**Live Application:** [👉 Click here to test MediBot on Railway](https://medibot-app-jubi-production.up.railway.app/)
+**Live Application:** [👉 Click here to test MediBot on Railway](https://medibot-live-production.up.railway.app/)
 
 MediBot is an AI-powered conversational agent specifically designed to answer clinical and health-related queries regarding **Diabetes, Hypertension, and COVID-19**. It leverages an advanced Retrieval-Augmented Generation (RAG) architecture grounded strictly in verified clinical research scraped directly from PubMed.
 

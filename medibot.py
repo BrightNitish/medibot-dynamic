@@ -41,7 +41,7 @@ def optimize_pubmed_query(user_query, client):
     
     try:
         response = client.chat.completions.create(
-            model="meta/llama-3.1-8b-instruct",
+            model="nvidia/nemotron-3.5-lightning-30b-a3b",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_query}
@@ -175,7 +175,7 @@ def main():
 
                 try:
                     response = client.chat.completions.create(
-                        model="meta/llama-3.1-8b-instruct", 
+                        model="nvidia/nemotron-3.5-lightning-30b-a3b", 
                         messages=[{"role": "user", "content": final_prompt}],
                         temperature=0.0
                     )
